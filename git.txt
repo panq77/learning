@@ -1,0 +1,10 @@
+git init 初始化仓库 成为git的一个本地仓库 当前目录会有一个.git的隐藏文件 
+git add "filename.后缀" 操作前提 git命令必须在git仓库目录下 filename也必须在操作的目录下。
+                        git add 把修改的内容提交到暂存区。可多次add 修改内容
+git commit 将暂存区所有内容提交版本库。 -m "说明"
+git status 查看暂存区状态。
+git log --pretty-oneline 可以看到版本号 以及修改的内容说明等信息
+git reflog 查看上次 的log
+git reset --hard 版本号 可以恢复之前版本
+git rm filename 删除文件
+git diff --filename 查看修改的内容
