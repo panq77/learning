@@ -8,3 +8,9 @@ git reflog 查看上次 的log
 git reset --hard 版本号 可以恢复之前版本
 git rm filename 删除文件
 git diff --filename 查看修改的内容
+git checkout -b     创建分支并切换 相当于 git branch dev ;git checkout dev 
+git branch 查看当前分支
+git checkout master 切换回master分支
+git merge dev 合并分支 （当前是master分支）
+git branch -d 删除分支
+git checkout --filename 撤销暂存区所有的修改
