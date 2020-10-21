@@ -14,3 +14,17 @@ git checkout master 切换回master分支
 git merge dev 合并分支 （当前是master分支）
 git branch -d 删除分支
 git checkout --filename 撤销暂存区所有的修改
+git merge --no-ff -m "merge with no-ff" dev 合并 不使用Fast forward (会丢失分支信息)
+git stash 存储工作 
+git stash list 查看stash内容
+git stash apply 恢复但不删除stash内容
+git stash drop 删除 stash内容 
+git stash pop 恢复同时删除stash内容
+git cherry-pick (id) 复制特定的提交到当前分支
+git pull  从远程库拉取最新提交
+git tag 查看所有标签
+git tag <tag> <commit-id> 给某次提交打上标签
+git tag -a -m   给指定标签写说明   -d 删除标签
+git push origin --tags 推送所有标签
+git push origin <tag> 推送指定标签
+
