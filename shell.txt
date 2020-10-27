@@ -63,3 +63,41 @@ if判断语句 语法 if 条件表达式 then ...else ..... fi
    -s      文件是否为空
    -e      文件是否存在
 
+
+echo -e 开启识别其中的转义字符 \n换行 \c  不换行 
+显示结果定向至文件 echo ... > myfile
+单引号 不进行转义取变量
+
+printf 转义 \b 后退 \c 不输出结果中的任何结尾的换行字符  \f 换页 \n 换行 \r 回车   \\  输出\
+
+for while until  条件 do开始 done结束 let 处理变量 不需要$来获取变量值 let "i++"
+
+case 值 in
+模式1）
+   command1.。。
+   。。
+   ;;
+模式2）
+   command2.。。。
+   ;;
+esac
+每一个模式必须以右括号结束 每个模式的执行以;;结束 只会执行一个模式 esac：case反过来 跳出case
+
+
+
+shell函数 fun(){.....}  可返回函数值 return 调用函数后 可以通过$?获取 在使用函数前 必须定义。
+
+shell输入/输出重定向
+   command > file 将输出重定向到file  file内的内容都会被覆盖
+   command < file 将输入重定向到file
+   command >> file 将输出以追加的方式重定向到file中
+   n > file 将文件描述符为n的重定向到file中  标准文件的文件描述符 0 标准输入 1 标准输出 2 标准错误 
+   n >> file
+   n >& m 将输出文件m和n合并
+   n <& m 将输入文件m和n合并
+   << tag 将tag开始标记 和tag结束标记直接的内容作为输入
+/dev/null 是一个特殊的文件 输入该文件的内容会直接被丢弃。
+
+
+shell中引用其他脚本 source ./test1.sh  或者 . ./test1.sh
+
