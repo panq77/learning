@@ -1,0 +1,13 @@
+1 首先在client端提交job到hadoop集群，
+2 向rm申请application rm会检测路径和权限 返回applicationid给 client 
+3 然后jobclient会把资源上传到hdfs上
+4 提交application 申请运行appmaster 
+5 rm会找到空闲nodemanager nm会启动容器，创建appmaster
+6 初始化任务
+7 从hdfs下载提交的资源到本地
+8 然后appmaster会像rm申请maptask资源
+9 rm将资源返回给nm nm各自启动容器 运行maptask 
+10 所有maptask运行完毕 向rm申请 reducetask任务
+11 appmaster会像rm申请注销
+
+读写

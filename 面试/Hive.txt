@@ -1,0 +1,38 @@
+Hive 本质是将hql转化为mapreduce程序
+主要用于 操作hdfs上的结构化数据 可以将结构化的数据文件映射为一张表 并提供hql。
+
+优点： 提供类sql语法 不需要取写mr
+        可以使用自定义函数
+		可以处理大数据
+缺点：
+      表达能力 
+	   迭代式算法无法表达（由于底层是MR迭代一次就会产生一个job，执行太慢，io瓶颈等问题）
+	   数据挖掘方面不擅长
+	  效率低 
+	   底层是将hql转化为mapreduce程序 不能智能化配置
+	   调优困难 粒度比较粗
+
+架构    sql解析器 编译器 优化器 执行器 （执行顺序） 先sql校验 在翻译为mr任务 然后进行优化 在执行
+
+           
+对hql了解吗
+     hql是类sql的查询语言，开发成本低，可以使用自定义函数，比较灵活。
+
+hive动态配置mr任务数  hiveclient中 set mapred.reduce.tasks=10 
+                启动时 。/hive -hiveconf mapred.reduce.tasks不给定值 就是查看 
+				
+hive中除了 string int double 还可以声明类型为数组 array<String> 和map<String,string> struct<map<..>,array<.>>
+在创建表是要指定分隔符
+
+row format delimited fields terminated by ',' 列分割
+collection items terminated by '_'             
+map keys terminated by ':'
+lines terminated by '\n'
+
+hive 内外表 互相转换  alter table tb set tblproperties('EXTERNAL'='TRUE');
+
+分区表 通过where 指定分区字段 就不会进行全表扫描 大大提高查询效率
+
+2级分区 当指定多个分区字段 其实就是层级分区 
+
+更改添加字段 alter table 表 add replace 替换所有字段 change 更新列 
