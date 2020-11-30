@@ -19,7 +19,7 @@ Hive 本质是将hql转化为mapreduce程序
      hql是类sql的查询语言，开发成本低，可以使用自定义函数，比较灵活。
 
 hive动态配置mr任务数  hiveclient中 set mapred.reduce.tasks=10 
-                启动时 。/hive -hiveconf mapred.reduce.tasks不给定值 就是查看 
+                启动时 ./hive -hiveconf mapred.reduce.tasks不给定值 就是查看 
 				
 hive中除了 string int double 还可以声明类型为数组 array<String> 和map<String,string> struct<map<..>,array<.>>
 在创建表是要指定分隔符
@@ -29,10 +29,33 @@ collection items terminated by '_'
 map keys terminated by ':'
 lines terminated by '\n'
 
-hive 内外表 互相转换  alter table tb set tblproperties('EXTERNAL'='TRUE');
+hive 内外表 互相转换  alter table tb set tblproperties('EXTERNAL'='TRUE/FALSE');
 
 分区表 通过where 指定分区字段 就不会进行全表扫描 大大提高查询效率
 
 2级分区 当指定多个分区字段 其实就是层级分区 
 
 更改添加字段 alter table 表 add replace 替换所有字段 change 更新列 
+
+hive每一个join都会开启一个mr任务。
+
+hive的4中排序：
+
+order by reduce 只能为 1 该方法对全表排序。
+sort by         分区内排序，分区规则为随机，
+distribute by   一般与sort 一起用，指定以什么字段分区。（hash）
+cluster by      需要开启分桶机制 set hive.enforce.bucketing=true; 
+                当distribute 与sort指定相同字段（就是每个分区中只有该字段）与cluster方法一样。
+
+truncate 表名 只有管理表可以，外部表不能。
+如果非要清空外部表 
+1 alter table set tblproperties（“external”=“false”） 在执行 这样会把hdfs上数据一起删除
+2 将外部表指定一个空目录
+3 使用 insert overwrite into
+
+空值处理：
+ NVL函数 	NVL(字段，值)
+时间处理：只支持 -连接日期格式 通过regexp_replace('date','/','-')替换成 -连接
+ date_format(date字段，格式（yyyy-MM-dd HH:mm:ss）) 
+ date_add("",天数（可以为负数）)
+ 

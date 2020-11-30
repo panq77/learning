@@ -1,0 +1,121 @@
+Spark:SparkCore,SparkSql,Sparkstreaming。Spark是基于内存的可迭代大数据并行计算引擎。可选择yarn作为资源调度。
+
+Spark系统架构：
+1.	Application
+2.	Driver  
+    主要职责：将用户程序转化为job
+	          在Executor之间调度任务task
+			  跟踪Executor的执行情况
+              通过UI展示查询运行情况			  
+3.	Executor
+    是一个节点上的JVM进程
+4.	Cluster Manager
+5.	Operation
+Spark在Yarn上部署的运行原理：
+在sparkclient中，1.向resourceManager提交应用。
+2.resourceManager在一个节点上创建应用管理器ApplicationMaster。
+3.应用管理器会向resourceManager申请资源。
+4. resourceManager向其返回资源列表。
+5. ApplicationMaster会找到一个节点创建spark执行器对象Executor。
+6. Executor向Master反向注册自己。
+7.Master分解任务，并调度任务让执行器执行。
+ 
+Spark-RDD：RDD中文弹性分布式数据集，是spark中最基本的数据抽象，也可以说是逻辑封装。
+RDD的属性： 
+1.分片：每一个分片对应一个计算任务处理 并决定并行计算粒度 在创建RDD的时候可以指定RDD的分片数，不指定就会采用默认值，默认为分配的cpu core的数目。
+2.函数：每个分片都会执行这个函数，每个RDD都实现compute函数，对迭代器进行复合，不需要保存中间计算结果。
+3.Partitioner：spark内部只实现2中分区函数，hashpartitioner 和rangepartitioner。partitioner只有在kv形式的RDD才有用。
+4.一个列表：存储每个partition的优先位置，本地化策略，让计算任务尽量在要处理的数据的存储位置进行 。 
+5.依赖关系：每次转换RDD都会产生新的RDD，RDD之间产生的依赖线。在分区数据丢失后，可以根据依赖关系重新计算该分区数据，而不是所有分区都重新计算。
+
+ RDD分类：
+1.	转换算子：通过一个RDD产生一个新的RDD，这些RDD都是延迟执行，叫lazy模式。转换RDD有：map，flatmap，filter，reducebykey，agrregatebykey，groupbykey 等等
+2.	行动算子：所有的转换算子只有经过行动算子才会开始计算。返回结果到driver驱动程序或者写入文件保存。（collect方法是将计算结果以Array的形式返回到driver）。经过action算子之后就不再是RDD。行动算子有：collect，reduce，count，first，take，foreach等。
+3. 会产生shuffle的算子：
+    （1）聚合： reducebykey，groupby，groupbykey，aggregatebykey，combinebykey 
+	（2）排序： sortbykey，sortby 
+	（3）重分区： coalesce，repartition
+	（4）集合：join，subtract，subtractbykey，leftouterjoin
+	（5）去重：distinct
+	
+Spark的DAG图：每个action操作都会形成一个DAG图，也就是一个spark的job任务。在图中，会划分各个阶段，stage。当产生suffle的时候会产生一个新的stage。在上面已经提到了会产生suffle的一些Transformtion函数。这些函数称为宽依赖，不产生的称为窄依赖。Suffle就是洗牌，会打乱数据，可能改变改变分区数，而窄依赖分区数不会改变。在选择合适的函数，就是对spark的优化。
+提交任务首先会在driver端通过dagscheduler从后往前拆分stage，形成多个taskset交给taskscheduler，其把taskset封装成taskmanager，按照指定的策略发到Executor
+RDD的血统：在大量迭代计算中，会用到多个RDD。这些RDD之间的关系就是血统。通过血统，可以快速恢复计算的数据结果。对于窄依赖，只需要对丢失的分区数据的父RDD对应的分区重新计算。对于宽依赖，由于suffle的特性，需要重新计算父RDD所有分区。
+
+Sparksql:spark用来处理结构化数据的一个模块。将数据的计算任务通过sql的形式转换为RDD提交到集群上。提供Dataframe和Dataset两种数据抽象。类似hive与MR的关系，用来简化RDD的复杂操作。
+Dataframe为RDD+schema，类似数据库的二维表。该数据抽象只会在运行时对数据的类型进行检测。
+Dataset则是Dataframe+样例类。dataset使得其完全融合scala完全面向对象。再dataset中 可以通过属性访问。
+sparksql 自定义函数  继承UserDefinedAggregateFunction
+
+spark操作api入口 是各种context，如sparkcontext创建RDD SQLcontext hivecontext streamingcontext
+sql查询的入口 再2.0引入sparkSession来操作dataframe和dataset。其结合hivecontext 以及sqlcontext所有操作。包括sparkcontext。所以底层计算实际还是RDD。
+
+
+spark yarn部署
+  1.spark-submit --参数。。 启动一个java进程，执行main函数
+  --main
+      1.封装参数
+      --new sparksubmitArguments
+	
+      2.提交
+      --submit sparksubmitArguments中action属性，对其赋值submit
+	     
+         准备提交环境
+		 --prepareSubmitEnviroment
+           //Cluster
+		   --childMainClass="org.apache.spark.deploy.yarn.Client"
+		   //Client
+		   --childMainClass="args.mainClass(SparkPi)"
+		   
+		 --doRunMain (执行RunMain)
+		   //反射加载类
+           --utils.classforName(mainClass)
+		   //查找Main方法
+		   --mainClass.getMethod("main",new Array[String](0).getClass)
+		   //调用main方法
+           --MainMehtod.invoke
+  2.Client 
+    --main
+	    封装参数
+	    --new ClientArguments
+		
+		--new Client 创建客户端对象 进入构造方法
+		   --yarn Client=YarnClient.CreateYarnClient
+		--client.run
+		  --submitapplication 给一个全局的appid
+		     //向Yarn提交应用
+			 --yarnClient.submitApplication(appcontext)
+			 
+
+
+spark内部通讯
+   spark使用netty进行内部通讯
+   BIO  阻塞式IO 需要一直等待IO
+   NIO  非阻塞式IO 开启一些线程 不断监听这个IO 返回通知
+   AIO  异步IO，告诉服务器处理完走哪些方法， 如ajax的回调函数，之后处理其他 操作系统linux不支持，但可以使用，不生效
+
+spark shuffle 
+shuffle分为 map 和reduce阶段。
+spark中目前使用sortSuffleManager
+先在内存中进行排序，排序过程中可能会溢写文件，先写入缓冲，再写入磁盘，把临时文件合并，并创建index，reduce拉取数据。
+其有两种方式进行 一种是sort，执行sort排序会使性能下降。还有一种，当map算子没有进行预聚合，并且分区数小于等于200 则不进行排序，通过hash建立索引也能快速查找。
+没有预聚合的算子 排序groupbykey
+
+spark内存管理  分为storage excution other  
+spark对内存的管理主要是对executor的内存管理，executor是某个节点的一个jvm进程，executorbackend。
+除了在jvm之上内存管理，spark还会对系统申请开辟内存空间，堆外内存，可以有效管理内存。
+
+动态占用机制 会占用其余的空闲空间，当空间满了，通过设置日志级别 溢写，否则丢弃。
+
+rdd缓存 
+spark计算之所以快，不仅是因为他是基于内存计算，他的最基础的弹性分布式数据集RDD可以被缓存，
+当该RDD被重用时，效率就会非常高。主要通过persist和cache方法实现。在被缓存前RDD不连续存在other块中
+当被缓存时，RDD存在storage块中一个一个连续的block块中。
+
+
+广播变量
+
+累加器
+
+
+               
