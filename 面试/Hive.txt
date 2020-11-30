@@ -58,4 +58,126 @@ truncate 表名 只有管理表可以，外部表不能。
 时间处理：只支持 -连接日期格式 通过regexp_replace('date','/','-')替换成 -连接
  date_format(date字段，格式（yyyy-MM-dd HH:mm:ss）) 
  date_add("",天数（可以为负数）)
+
+列转行
+ 函数 concat（""，""） concat_ws("|","","") collect_set/list集合函数 只能基本类型。
+行专列
+ 函数 later view explode("数组") temp as  定义字段名  将数组拆分，要与原表保持关联 lateral view
+ 
+ 
+ 自定义函数：
+ UDF一进一出
+  java类继承UDF类，实现 evaluate 方法。打包上传 通过 add jar 路径+类名
+  create function 方法名 as '全类名'  
+ UDTF
+  继承GenericUDTF 重写 
+  initialize(定义输出数据的列名 和 类型) 
+  
+  List<> fieldNames =new ArrayList<>();
+  add
+  List<ObjectInspector> fieldOIs=new ArrayList<>()
+  add(PrimitiveObjectInspectorFactory.javaStringObjectInspector)
+  return  ObjectInspectorFactory.getStandarStructObjectInspector(fieldNames,fieldOIs)
+  
+  prosess （逻辑处理）
+   写出 forward（类型与初始化一致）
+  close(关闭资源时使用)
+ 
+ hive数据压缩
+
+ 开启中间传输功能
+ set hive.exec.compress.intermediate=true; 
+ 开启map传输到reduce时数据压缩
+ set mapreduce.map.output.compress=true;
+ 设置map的输出数据格式
+ set mapreduce.map.output.compress.codec=org.apache.hadoop.io.compress.SnappyCodec;
+ 
+ 开启最终输出压缩	
+ set hive.exec.compress.output=ture;
+ 开启数据压缩
+ set mapreduce.output.fileoutputformat.compress=true;
+ 设置压缩格式
+ mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.SnappyCode;
+ 设置为块压缩
+ set mapreduce.output.fileoutputformat.compress.type=BLOCK;
+ 
+ hive支持的数据格式 （textfile sequencefile）行存储  （orc parquet）列存储
+ 一般使用orc格式 store as orc  tblproperties("orc.compress"="SNAPPY")
+ 
+
+ 调优  
+  1.fetch 为more 简单搜索 直接访问目录数据返回，不会要用mr
+  2.开启本地模式 小数量集 set hive.exec.mode.local.auto=true;
+    local mr 默认最大输入文件个数 4        修改 set hive.exec.mode.local.auto.input.files.max=
+  3.表 
+ 空值过滤 放在子查询中
+ 空值转换 通过 concat 以及 if 或者 case when then else 来替换空值
+ 大小表 join 通过设置表缓冲大小，会自己判断 大表 小表进行优化。
+        set hive.auto.convert.join=true; 默认为true
+        set hive mapjoin.malltable.filesize=默认25M
+ group  by 当数据倾斜的时候  开启 实现负载均衡（通过随机数，最后会去掉） 2个MR任务
+ 第一个mr 随机发给reduce进行部分聚合 返回数据 第二个MR 再通过groupby 聚合得到最后的结果。
+ set hive.groupby.skewindata=true
+ 
+ 4.group by 去重
+ 
+ 5.尽量避免笛卡尔积 例如 join 无 on 或指定无效字段。 mr只能用一个reduce来执行
+ 
+ 6.动态分区
+ 开启：hive.exec.dynamic.partition=true
+ 设置非严格模式（默认为strict）：hive.exec.dynamic.partition.mode=nonstrict 
+ 所有MR动态分区数 hive.exec.max.dynamic.partitions=1000
+ 每个MR动态分区数 hive.exec.max.dynamic.partitions。pernode=100
+ 创建分区表，load数据时，只会要指定partition的字段名会实现动态分区。select字段最后一个为分区的内容
+ 
+ 7.MR调优
+ map:
+ 文件过大 增加map数 改变块大小 默认128M
+ 小文件合并 hive默认开启。通过改变切片数。设置切片值大小。
+ set mapreduce.input.fileinputformat.split.maxsize=100
+ reduce:
+ reduce默认处理数据量 156MB
+ hive.exec.reducers.bytes.per.reducer=256000000
+ 每个任务最大的reduce数默认1009
+ hive.exec.reducers.max=1009
+ 计算reducer数的公式
+ N=min(参数2，总输入数据量/参数1)
+ 
+ hadoop中 mapred-default.xml 设置每个job的reduce个数
+ set mapreduce.job.reduces=15
+ 
+ 设置sql最大并行数
+ set hive.exec.parallel=true
+ set hive.exec.parallel.thread.number=16 默认为8
+ 只有在空闲时候才能并行操作。
+ 
+ 全局的严格模式
+ set hive.mapred.mode=strict		
+ 在该模式下 不允许笛卡尔积 orderby without limit
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
