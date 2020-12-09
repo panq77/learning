@@ -105,6 +105,7 @@ spark内存管理  分为storage excution other
 spark对内存的管理主要是对executor的内存管理，executor是某个节点的一个jvm进程，executorbackend。
 除了在jvm之上内存管理，spark还会对系统申请开辟内存空间，堆外内存，可以有效管理内存。
 
+spark中，driver和executor都有blockmanager负责内存管理。
 动态占用机制 会占用其余的空闲空间，当空间满了，通过设置日志级别 溢写，否则丢弃。
 
 rdd缓存 
@@ -112,10 +113,16 @@ spark计算之所以快，不仅是因为他是基于内存计算，他的最基
 当该RDD被重用时，效率就会非常高。主要通过persist和cache方法实现。在被缓存前RDD不连续存在other块中
 当被缓存时，RDD存在storage块中一个一个连续的block块中。
 
+共享变量
+在Driver端要把计算任务发给Executor，会进行闭包检测，检测计算过程是否用到外部变量，如果有，会检测是否可以序列化，在一并发给Executor。
 
-广播变量
 
-累加器
+广播变量 只读变量
+ broadcast（i）只会给executor的每个节点发送一份。每个节点的task共享这个变量。
 
+
+累加器   只写变量
+数据增大。 自定义累加器 继承 AccumilatorV2 
+accumulator在driver，executor计算结果会返回driver的 accumulator。
 
                

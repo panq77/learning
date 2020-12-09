@@ -5,7 +5,7 @@ Hive 本质是将hql转化为mapreduce程序
         可以使用自定义函数
 		可以处理大数据
 缺点：
-      表达能力 
+      表达能力   
 	   迭代式算法无法表达（由于底层是MR迭代一次就会产生一个job，执行太慢，io瓶颈等问题）
 	   数据挖掘方面不擅长
 	  效率低 
@@ -110,11 +110,15 @@ truncate 表名 只有管理表可以，外部表不能。
   2.开启本地模式 小数量集 set hive.exec.mode.local.auto=true;
     local mr 默认最大输入文件个数 4        修改 set hive.exec.mode.local.auto.input.files.max=
   3.表 
+  
  空值过滤 放在子查询中
+ 
  空值转换 通过 concat 以及 if 或者 case when then else 来替换空值
+ 
  大小表 join 通过设置表缓冲大小，会自己判断 大表 小表进行优化。
         set hive.auto.convert.join=true; 默认为true
         set hive mapjoin.malltable.filesize=默认25M
+		
  group  by 当数据倾斜的时候  开启 实现负载均衡（通过随机数，最后会去掉） 2个MR任务
  第一个mr 随机发给reduce进行部分聚合 返回数据 第二个MR 再通过groupby 聚合得到最后的结果。
  set hive.groupby.skewindata=true
